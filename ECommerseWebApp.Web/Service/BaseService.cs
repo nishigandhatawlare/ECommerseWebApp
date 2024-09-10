@@ -19,17 +19,23 @@ namespace ECommerseWebApp.Web.Service
         {
             try
             {
+                // Create the HttpClient using the factory
                 HttpClient client = _httpClientFactory.CreateClient("ECommerseWebAppApi");
+
+                // Create the HttpRequestMessage
                 HttpRequestMessage message = new();
                 message.Headers.Add("Accept", "application/json");
-                //token
+
+                // Set the request URI
                 message.RequestUri = new Uri(requestDto.Url);
+
+                // Add request body content if available
                 if (requestDto.Data != null)
                 {
                     message.Content = new StringContent(JsonConvert.SerializeObject(requestDto.Data), Encoding.UTF8, "application/json");
                 }
-                HttpResponseMessage? apiResponse = null;
 
+                // Set the HTTP method based on the ApiType
                 switch (requestDto.ApiType)
                 {
                     case ApiType.Post:
@@ -45,38 +51,57 @@ namespace ECommerseWebApp.Web.Service
                         message.Method = HttpMethod.Get;
                         break;
                 }
-                apiResponse = await client.SendAsync(message);
 
+                // Send the HTTP request
+                HttpResponseMessage? apiResponse = await client.SendAsync(message);
+
+                // Handle different HTTP status codes
                 switch (apiResponse.StatusCode)
                 {
                     case HttpStatusCode.NotFound:
-                        return new() { IsSuccess = false, Message = "Notfound" };
-                        break;
+                        return new ResponseDto { IsSuccess = false, Message = "Not Found" };
                     case HttpStatusCode.Forbidden:
-                        return new() { IsSuccess = false, Message = "Access Denied" };
-                        break;
+                        return new ResponseDto { IsSuccess = false, Message = "Access Denied" };
                     case HttpStatusCode.Unauthorized:
-                        return new() { IsSuccess = false, Message = "Unauthorized" };
-                        break;
+                        return new ResponseDto { IsSuccess = false, Message = "Unauthorized" };
                     case HttpStatusCode.InternalServerError:
-                        return new() { IsSuccess = false, Message = "Internal Server Error" };
-                        break;
+                        return new ResponseDto { IsSuccess = false, Message = "Internal Server Error" };
                     default:
-                        var apiContent = await apiResponse.Content.ReadAsStringAsync();
-                        var apiResponseDto = JsonConvert.DeserializeObject<ResponseDto>(apiContent);
-                        return apiResponseDto;
+                        // If status code indicates success
+                        if (apiResponse.IsSuccessStatusCode)
+                        {
+                            // Read and deserialize the response content
+                            var apiContent = await apiResponse.Content.ReadAsStringAsync();
+                            var apiResponseDto = JsonConvert.DeserializeObject<ResponseDto>(apiContent);
+
+                            // Set the success flag and message if deserialization succeeds
+                            if (apiResponseDto != null)
+                            {
+                                apiResponseDto.IsSuccess = true;
+                                apiResponseDto.Message = "Request successful!";
+                                return apiResponseDto;
+                            }
+                            else
+                            {
+                                return new ResponseDto { IsSuccess = false, Message = "Failed to deserialize response" };
+                            }
+                        }
+                        else
+                        {
+                            // If not successful, handle unexpected statuses
+                            return new ResponseDto { IsSuccess = false, Message = "Unexpected status code: " + apiResponse.StatusCode };
+                        }
                 }
             }
             catch (Exception ex)
             {
-                var dto = new ResponseDto
+                // Catch and return error response
+                return new ResponseDto
                 {
                     Message = ex.Message.ToString(),
                     IsSuccess = false
                 };
-                return dto;
             }
-            
         }
     }
 }
