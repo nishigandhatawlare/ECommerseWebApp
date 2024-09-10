@@ -5,6 +5,7 @@ using static ECommerseWebApp.Web.Utility.SD;
 
 namespace ECommerseWebApp.Web.Service
 {
+   
     public class CouponService : ICouponService
     {
         private readonly IBaseService _baseService;
@@ -18,7 +19,7 @@ namespace ECommerseWebApp.Web.Service
             {
                 ApiType = ApiType.Post,
                 Data = couponDto,
-                Url = CouponApiBase + "/api/coupon/"
+                Url = CouponApiBase + "/api/couponapi/"
             });
         }
 
@@ -27,7 +28,7 @@ namespace ECommerseWebApp.Web.Service
             return await _baseService.SendAsync(new RequestDto()
             {
                 ApiType = ApiType.Delete,
-                Url = CouponApiBase + "/api/coupon/" + couponId
+                Url = CouponApiBase + "/api/couponapi/" + couponId
             });
         }
 
@@ -36,7 +37,7 @@ namespace ECommerseWebApp.Web.Service
             return await _baseService.SendAsync(new RequestDto()
             {
             ApiType = ApiType.Get,
-            Url = CouponApiBase + "/api/coupon"
+            Url = CouponApiBase + "/api/couponapi"
             });
         }
 
@@ -45,7 +46,7 @@ namespace ECommerseWebApp.Web.Service
             return await _baseService.SendAsync(new RequestDto()
             {
                 ApiType = ApiType.Get,
-                Url = CouponApiBase + "/api/coupon/GetByCode/"+couponCode
+                Url = CouponApiBase + "/api/couponapi/GetByCode/" + couponCode
             });
         }
 
@@ -54,7 +55,7 @@ namespace ECommerseWebApp.Web.Service
             return await _baseService.SendAsync(new RequestDto()
             {
                 ApiType = ApiType.Get,
-                Url = CouponApiBase + "/api/coupon/"+couponId
+                Url = CouponApiBase + "/api/couponapi/" + couponId
             });
         }
 
@@ -64,7 +65,7 @@ namespace ECommerseWebApp.Web.Service
             {
                 ApiType = ApiType.Put,
                 Data = couponDto,
-                Url = CouponApiBase + "/api/coupon/"+couponId
+                Url = CouponApiBase + "/api/couponapi/" + couponId
             });
         }
     }
