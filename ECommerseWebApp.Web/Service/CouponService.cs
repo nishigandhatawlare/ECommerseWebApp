@@ -28,7 +28,7 @@ namespace ECommerseWebApp.Web.Service
             return await _baseService.SendAsync(new RequestDto()
             {
                 ApiType = ApiType.Delete,
-                Url = CouponApiBase + "/api/couponapi/" + couponId
+                Url = $"{CouponApiBase}/api/couponapi/{couponId}"
             });
         }
 
@@ -55,7 +55,7 @@ namespace ECommerseWebApp.Web.Service
             return await _baseService.SendAsync(new RequestDto()
             {
                 ApiType = ApiType.Get,
-                Url = CouponApiBase + "/api/couponapi/" + couponId
+                Url = $"{CouponApiBase}/api/couponapi/{couponId}"
             });
         }
 

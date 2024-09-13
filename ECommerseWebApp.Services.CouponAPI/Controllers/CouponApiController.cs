@@ -15,7 +15,7 @@ namespace ECommerseWebApp.Services.CouponAPI.Controllers
         private ResponseDto _response;
         private IMapper _mapper;
 
-        public CouponApiController(AppDbContext db,IMapper mapper)
+        public CouponApiController(AppDbContext db, IMapper mapper)
         {
             _db = db;
             _response = new ResponseDto();
@@ -30,26 +30,27 @@ namespace ECommerseWebApp.Services.CouponAPI.Controllers
                 IEnumerable<Coupon> objList = _db.Coupons.ToList();
                 _response.Result = _mapper.Map<IEnumerable<CouponDto>>(objList);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 _response.IsSuccess = false;
                 _response.Message = ex.Message;
             }
             return _response;
         }
-        [HttpGet]
-        [Route("id:int")]
+        [HttpGet("{id}")]
         public ResponseDto Get(int id)
         {
             try
             {
-                Coupon objList = _db.Coupons.First(u=>u.CouponId== id);
-                if (objList == null) 
+                Coupon objList = _db.Coupons.First(u => u.CouponId == id);
+                if (objList == null)
                 {
                     _response.IsSuccess = false;
                     _response.Message = "Coupon not found";
                 }
                 _response.Result = _mapper.Map<CouponDto>(objList);
+                _response.IsSuccess = true;
+                _response.Message = $"Coupon retrieved successfully for Id : {id}!";
             }
             catch (Exception ex)
             {
@@ -65,7 +66,7 @@ namespace ECommerseWebApp.Services.CouponAPI.Controllers
             try
             {
                 Coupon objList = _db.Coupons.FirstOrDefault(u => u.CouponCode.ToLower() == code.ToLower());
-                if (objList == null) 
+                if (objList == null)
                 {
                     _response.IsSuccess = false;
                 }
@@ -83,7 +84,7 @@ namespace ECommerseWebApp.Services.CouponAPI.Controllers
         {
             try
             {
-               Coupon obj = _mapper.Map<Coupon>(couponDto);
+                Coupon obj = _mapper.Map<Coupon>(couponDto);
                 _db.Coupons.Add(obj);
                 _db.SaveChanges();
                 _response.Result = _mapper.Map<CouponDto>(obj);
@@ -141,7 +142,7 @@ namespace ECommerseWebApp.Services.CouponAPI.Controllers
             return _response;
         }
 
-        [HttpDelete]
+        [HttpDelete("{id}")]
         public ResponseDto Delete(int id)
         {
             try
