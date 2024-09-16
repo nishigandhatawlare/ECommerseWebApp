@@ -33,12 +33,6 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
 builder.Services.AddHttpClient<ICouponService,CouponService>();
 
-// Add logging services
-builder.Logging.ClearProviders(); // Optional: Clear default providers
-builder.Logging.AddConsole();     // Add console logging
-builder.Logging.AddDebug();       // Add debug logging (Visual Studio output)
-
-
 SD.CouponApiBase = builder.Configuration["ServiceUrls:CouponApi"];
 
 builder.Services.AddScoped<IBaseService,BaseService>();
