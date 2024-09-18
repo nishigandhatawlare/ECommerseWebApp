@@ -32,9 +32,17 @@ namespace ECommerseWebApp.Services.AuthAPI.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login()
+        public async Task<IActionResult> Login([FromBody] LoginRequestDto loginRequestDto)
         {
-            return Ok();
+            var loginResponse = await _authService.Login(loginRequestDto);
+            if (loginResponse.User ==  null) 
+            {
+                _response.IsSuccess = false;
+                _response.Message = "UserName or Password is Incorrect!";
+                return BadRequest(_response);
+            }
+            _response.IsSuccess = true;
+            return Ok(_response);
         }
     }
 }
