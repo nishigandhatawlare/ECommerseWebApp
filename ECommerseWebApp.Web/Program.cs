@@ -32,10 +32,13 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
 builder.Services.AddHttpClient<ICouponService,CouponService>();
+builder.Services.AddHttpClient<IAuthService, AuthService>();
 
 SD.CouponApiBase = builder.Configuration["ServiceUrls:CouponApi"];
+SD.AuthApiBase = builder.Configuration["ServiceUrls:AuthApi"];
 
 builder.Services.AddScoped<IBaseService,BaseService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICouponService,CouponService>();
 var app = builder.Build();
 
