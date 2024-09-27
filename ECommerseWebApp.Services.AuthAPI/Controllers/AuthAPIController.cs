@@ -34,16 +34,46 @@ namespace ECommerseWebApp.Services.AuthAPI.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequestDto loginRequestDto)
         {
-            var loginResponse = await _authService.Login(loginRequestDto);
-            if (loginResponse.User ==  null) 
+            try
             {
-                _response.IsSuccess = false;
-                _response.Message = "UserName or Password is Incorrect!";
-                return BadRequest(_response);
+                // Call the login service
+                var loginResponse = await _authService.Login(loginRequestDto);
+
+                // Check if the login was unsuccessful
+                if (loginResponse?.User == null)
+                {
+                    return BadRequest(new ResponseDto
+                    {
+                        IsSuccess = false,
+                        Message = "Username or Password is incorrect!",
+                        Result = null
+                    });
+                }
+
+                // If successful, return the login response with the token and user details
+                return Ok(new ResponseDto
+                {
+                    IsSuccess = true,
+                    Message = "Login successful!",
+                    Result = new
+                    {
+                        User = loginResponse.User,   // Send user details
+                        Token = loginResponse.Token  // Send JWT token
+                    }
+                });
             }
-            _response.IsSuccess = true;
-            return Ok(_response);
+            catch (Exception ex)
+            {
+                // Handle unexpected errors
+                return StatusCode(500, new ResponseDto
+                {
+                    IsSuccess = false,
+                    Message = "An error occurred while processing your login request.",
+                    Result = null
+                });
+            }
         }
+
 
         [HttpPost("assignRole")]
         public async Task<IActionResult> AssignRole([FromBody] RegistrationRequestDto model)

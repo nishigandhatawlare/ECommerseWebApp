@@ -2,7 +2,9 @@
 using ECommerseWebApp.Web.Service.IService;
 using ECommerseWebApp.Web.Utility;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Newtonsoft.Json;
 using Serilog;
 using System;
 
@@ -32,6 +34,55 @@ namespace ECommerseWebApp.Web.Controllers
                 return RedirectToAction("Error", "Home");
             }
         }
+        [HttpPost]
+        public async Task<IActionResult> Login(LoginRequestDto loginRequestDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                Log.Warning("Invalid login model state for user {Username}.", loginRequestDto.UserName);
+                return View(loginRequestDto);
+            }
+
+            try
+            {
+                // Call the login service
+                ResponseDto responseDto = await _authService.LoginAsync(loginRequestDto);
+
+                // Check if login was successful
+                if (responseDto == null || !responseDto.IsSuccess)
+                {
+                    Log.Warning("Login failed for user {Username}. Result: {Result}", loginRequestDto.UserName, responseDto);
+                    ModelState.AddModelError("CustomError", responseDto?.Message ?? "Login failed. Please try again.");
+                    TempData["error"] = responseDto?.Message ?? "Login failed. Please try again.";
+                    return View(loginRequestDto);
+                }
+
+                // Safely deserialize login response
+                var loginResponseDto = responseDto.Result != null
+                    ? JsonConvert.DeserializeObject<LoginResponseDto>(Convert.ToString(responseDto.Result))
+                    : null;
+
+                if (loginResponseDto == null)
+                {
+                    Log.Warning("Login response deserialization failed for user {Username}.", loginRequestDto.UserName);
+                    TempData["error"] = "Login failed due to an internal error. Please try again.";
+                    return View(loginRequestDto);
+                }
+
+                // Assuming successful login, set success message and redirect
+                TempData["success"] = "Login successful!";
+                Log.Information("User {Username} logged in successfully.", loginRequestDto.UserName);
+                return RedirectToAction("Index", "Home");
+            }
+            catch (Exception ex)
+            {
+                // Log any exception that occurred during the login process
+                Log.Error(ex, "Error occurred during login for user {Username}.", loginRequestDto.UserName);
+                TempData["error"] = "An error occurred while processing your login. Please try again.";
+                return View(loginRequestDto);
+            }
+        }
+
 
         [HttpGet]
         public IActionResult Register()

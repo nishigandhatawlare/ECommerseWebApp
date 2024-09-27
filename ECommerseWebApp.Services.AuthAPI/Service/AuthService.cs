@@ -40,34 +40,48 @@ namespace ECommerseWebApp.Services.AuthAPI.Service
 
         public async Task<LoginResponseDto> Login(LoginRequestDto loginRequestDto)
         {
-            //retrive the extisting user of requested username
-            var user = _db.ApplicationUsers.FirstOrDefault(u=>u.UserName.ToLower() == loginRequestDto.UserName.ToLower());
-            //check paswword valid or not
-            bool isValid = await _userManager.CheckPasswordAsync(user,loginRequestDto.Password);
-            if (user == null && isValid == false) {
+            // Retrieve the existing user by username
+            var user = _db.ApplicationUsers.FirstOrDefault(u => u.UserName.ToLower() == loginRequestDto.UserName.ToLower());
+
+            // Check if the user exists
+            if (user == null)
+            {
                 return new LoginResponseDto()
                 {
                     User = null,
                     Token = ""
                 };
             }
-            //if user was found need to generate JWT Token
+
+            // Validate the password if the user exists
+            bool isValid = await _userManager.CheckPasswordAsync(user, loginRequestDto.Password);
+            if (!isValid)
+            {
+                return new LoginResponseDto()
+                {
+                    User = null,
+                    Token = ""
+                };
+            }
+
+            // Generate JWT Token
             var token = _jwtTokenGenerator.GenerateToken(user);
 
-
+            // Map the user entity to the UserDto
             UserDto userDto = new()
-                {
-                    Email = user.Email,
-                    ID = user.Id,
-                    Name = user.Name,
-                    PhoneNumber = user.PhoneNumber
-                };
-            LoginResponseDto loginResponseDto = new LoginResponseDto()
+            {
+                Email = user.Email,
+                ID = user.Id,
+                Name = user.Name,
+                PhoneNumber = user.PhoneNumber
+            };
+
+            // Return the login response with user and token
+            return new LoginResponseDto()
             {
                 User = userDto,
-                Token = token   //will assign toke here after generating
+                Token = token
             };
-            return loginResponseDto; 
         }
 
         public async Task<string> Register(RegistrationRequestDto registrationRequestDto)
