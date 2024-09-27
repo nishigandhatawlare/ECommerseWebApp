@@ -19,6 +19,25 @@ namespace ECommerseWebApp.Services.AuthAPI.Service
             _roleManager = roleManager;
             _jwtTokenGenerator = jwtTokenGenerator;
         }
+
+        public async Task<bool> AssignRole(string email, string roleName)
+        {
+            var user = _db.ApplicationUsers.FirstOrDefault(u => u.Email.ToLower() == email.ToLower());
+            //if user is not null 
+            if (user != null)
+            {
+                //if role is not present
+                if (!_roleManager.RoleExistsAsync(roleName).GetAwaiter().GetResult()) 
+                { 
+                //create role if it does not exists
+                _roleManager.CreateAsync(new IdentityRole(roleName)).GetAwaiter().GetResult();
+                }
+                await _userManager.AddToRoleAsync(user, roleName);
+                return true;
+            }
+            return false;
+        }
+
         public async Task<LoginResponseDto> Login(LoginRequestDto loginRequestDto)
         {
             //retrive the extisting user of requested username
