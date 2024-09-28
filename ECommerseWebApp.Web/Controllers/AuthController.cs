@@ -1,22 +1,29 @@
 ﻿using ECommerseWebApp.Web.Models;
 using ECommerseWebApp.Web.Service.IService;
 using ECommerseWebApp.Web.Utility;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
 using Serilog;
 using System;
+using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace ECommerseWebApp.Web.Controllers
 {
     public class AuthController : Controller
     {
         private readonly IAuthService _authService;
+        private readonly ITokenProvider _tokenProvider;
 
-        public AuthController(IAuthService authService)
+
+        public AuthController(IAuthService authService, ITokenProvider tokenProvider)
         {
             _authService = authService ?? throw new ArgumentNullException(nameof(authService));
+            _tokenProvider = tokenProvider;
         }
 
         [HttpGet]
@@ -61,15 +68,15 @@ namespace ECommerseWebApp.Web.Controllers
                 var loginResponseDto = responseDto.Result != null
                     ? JsonConvert.DeserializeObject<LoginResponseDto>(Convert.ToString(responseDto.Result))
                     : null;
-
                 if (loginResponseDto == null)
                 {
                     Log.Warning("Login response deserialization failed for user {Username}.", loginRequestDto.UserName);
                     TempData["error"] = "Login failed due to an internal error. Please try again.";
                     return View(loginRequestDto);
                 }
-
+                await SignInUser(loginResponseDto);
                 // Assuming successful login, set success message and redirect
+                _tokenProvider.SetToken(loginResponseDto.Token);
                 TempData["success"] = "Login successful!";
                 Log.Information("User {Username} logged in successfully.", loginRequestDto.UserName);
                 return RedirectToAction("Index", "Home");
@@ -155,14 +162,14 @@ namespace ECommerseWebApp.Web.Controllers
                 return View(registrationRequestDto);
             }
         }
-
-        public IActionResult Logout()
+        public async Task<IActionResult> LogoutUser()
         {
             try
             {
-                // Add logic for logging out if needed
+                await HttpContext.SignOutAsync();
+                _tokenProvider.ClearToken();
                 Log.Information("User logged out.");
-                return RedirectToAction(nameof(Login));
+                return RedirectToAction("Index", "Home");
             }
             catch (Exception ex)
             {
@@ -170,6 +177,30 @@ namespace ECommerseWebApp.Web.Controllers
                 TempData["error"] = "An error occurred while logging out.";
                 return RedirectToAction("Error", "Home");
             }
+        }
+
+        private async Task SignInUser(LoginResponseDto model)
+        {
+            var handler = new JwtSecurityTokenHandler();
+
+            var jwt = handler.ReadJwtToken(model.Token);
+
+            var identity = new ClaimsIdentity(CookieAuthenticationDefaults.AuthenticationScheme);
+            identity.AddClaim(new Claim(JwtRegisteredClaimNames.Email,
+                jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Email).Value));
+            identity.AddClaim(new Claim(JwtRegisteredClaimNames.Sub,
+                jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Sub).Value));
+            identity.AddClaim(new Claim(JwtRegisteredClaimNames.Name,
+                jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Name).Value));
+
+
+            identity.AddClaim(new Claim(ClaimTypes.Name,
+                jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Email).Value));
+            
+
+
+            var principal = new ClaimsPrincipal(identity);
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
         }
     }
 }

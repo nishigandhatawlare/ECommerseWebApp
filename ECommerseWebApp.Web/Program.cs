@@ -1,6 +1,7 @@
 using ECommerseWebApp.Web.Service;
 using ECommerseWebApp.Web.Service.IService;
 using ECommerseWebApp.Web.Utility;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Serilog;
 using Serilog.Events;
 
@@ -25,6 +26,13 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.Seq("http://localhost:5341")  // Optional: Send logs to Seq server (cloud/remote logging)
     .CreateLogger();
 
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Auth/Login";
+        options.ExpireTimeSpan = TimeSpan.FromHours(10); // Default expiration
+        options.AccessDeniedPath = "/Auth/AccessDenied"; // Cookie will be refreshed if nearing expiration
+    });
 // Use Serilog as the logging provider
 builder.Host.UseSerilog();
 // Add services to the container.
@@ -36,7 +44,7 @@ builder.Services.AddHttpClient<IAuthService, AuthService>();
 
 SD.CouponApiBase = builder.Configuration["ServiceUrls:CouponApi"];
 SD.AuthApiBase = builder.Configuration["ServiceUrls:AuthApi"];
-
+builder.Services.AddScoped<ITokenProvider, TokenProvider>();
 builder.Services.AddScoped<IBaseService,BaseService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICouponService,CouponService>();
@@ -54,7 +62,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(

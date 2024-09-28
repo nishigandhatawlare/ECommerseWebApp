@@ -123,6 +123,7 @@ namespace ECommerseWebApp.Services.AuthAPI.Service
             }
             return "Error Encountered!";
           
-    }
+        }
+
     }
 }
