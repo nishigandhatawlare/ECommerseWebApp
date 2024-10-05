@@ -63,9 +63,9 @@ namespace ECommerseWebApp.Services.AuthAPI.Service
                     Token = ""
                 };
             }
-
+            var roles = await _userManager.GetRolesAsync(user);
             // Generate JWT Token
-            var token = _jwtTokenGenerator.GenerateToken(user);
+            var token = _jwtTokenGenerator.GenerateToken(user, roles);
 
             // Map the user entity to the UserDto
             UserDto userDto = new()
