@@ -28,7 +28,7 @@ namespace ECommerseWebApp.Web.Service
                 ApiType = ApiType.Post,
                 Data = loginRequestDto,
                 Url = AuthApiBase + "/api/auth/login"
-            });
+            }, withBearer: false);
         }
 
         public async  Task<ResponseDto>? RegisterAsync(RegistrationRequestDto registrationRequestDto)
@@ -38,7 +38,7 @@ namespace ECommerseWebApp.Web.Service
                 ApiType = ApiType.Post,
                 Data = registrationRequestDto,
                 Url = AuthApiBase + "/api/auth/register"
-            });
+            }, withBearer: false);
         }
     }
 }
