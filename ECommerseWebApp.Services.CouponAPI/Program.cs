@@ -1,6 +1,7 @@
 using AutoMapper;
 using ECommerseWebApp.Services.CouponAPI;
 using ECommerseWebApp.Services.CouponAPI.Data;
+using ECommerseWebApp.Services.CouponAPI.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -70,6 +71,7 @@ builder.Services.AddAuthentication(x =>
 
     };
 });
+builder.AddAppAuthentication();
 builder.Services.AddAuthorization();
 var app = builder.Build();
 
